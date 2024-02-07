@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Banners</title>
+</head>
+<body>
+    <h1 style="text-align: center;">Look for Movie banner</h1>
+    <div style="display: flex;flex-wrap: wrap;justify-content: space-around;">
+        <div class="movies" style="display: flex;align-content: center;flex-direction: column;align-items: center;position: relative;">
+            <input style="margin-bottom:1em;" class="title" placeholder="Type in Movie title ..."/>
+            <div class="movie"></div>
+        </div>          
+        <div class="movies" style="display: flex;align-content: center;flex-direction: column;align-items: center;position: relative;">
+            <input style="margin-bottom:1em;" class="title" placeholder="Type in Movie title ..."/>
+            <div class="movie"></div>
+        </div>   
+        <div class="movies" style="display: flex;align-content: center;flex-direction: column;align-items: center;position: relative;">
+            <input style="margin-bottom:1em;" class="title" placeholder="Type in Movie title ..."/>
+            <div class="movie"></div>
+        </div>                     
+    </div>
+    <button type='submit' style="position: fixed;left: 50%;transform: translate(-50%, -50%);bottom: 1rem;">Search</button>
+    <script src="https://code.jquery.com/jquery-3.6.2.min.js" integrity="sha256-2krYZKh//PcchRtd+H+VyyQoZ/e3EcrkxhM8ycwASPA=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            const getMovieData = (title, noMovie) => {
+                return new Promise((res,rej) => {
+                    try {
+                        if (noMovie) {
+                            res({results: [{error: 'NoRequested'}]});
+                        }
+                        else {
+                            $.ajax({
+                            url: `https://api.themoviedb.org/3/search/movie?api_key=e9ddb24aed6d48c4342303aba5269e28&query=${title}`,
+                            method: 'get',
+                            success: (data) => {
+                                res(data)
+                            },
+                            error: (errMsg)=>{
+                                res({results: [{error: 'error'}]});
+                            }})      
+                        }
+                    } catch (e) {
+                        rej({results: [{error: 'error'}]});
+                    }
+                })
+            }
+
+            $("button").click(()=> {
+                const moviePromises = Array.from($(".title")).map(i => {
+                    return getMovieData(i.value, i.value === '' ? true : false);
+                })
+                Promise.all(moviePromises).then(values => {
+                    $.each(values, (i,v) => {
+                        if (v.results[0]?.error === 'NoRequested') {
+                            $('.movie').eq(i).html(`<div style="width: 300px;height: 450px;background: #efefef;"><span style="position: absolute;transform: translate(-50%, -50%);top: 45%;left: 50%;">No movie requested</span></div>`)
+                        } else if (v.results[0]?.error === 'error' || v.results.length === 0) {
+                            $('.movie').eq(i).html(`<div style="width: 300px;height: 450px;background: #efefef;"><span style="position: absolute;transform: translate(-50%, -50%);top: 45%;left: 50%;">No movie found</span></div>`)
+                        } else {
+                            $('.movie').eq(i).html(`<img src='http://image.tmdb.org/t/p/w300${v.results[0].poster_path}'/>`)
+                        }
+                    })
+                }).catch(error => {
+                    console.log(error)
+                })
+            })
+        })
+    </script>
+</body>
+</html>
